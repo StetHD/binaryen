@@ -19,7 +19,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <algorithm>
 #include <list>
 #include <stack>
 #include <string>
@@ -109,7 +108,6 @@ wasm::Expression* Branch::Render(RelooperBuilder& Builder, Block *Target, bool S
   if (Ancestor) {
     if (Type == Break) {
       Ret->list.push_back(Builder.makeBlockBreak(Target->Id));
-// XXX
     } else if (Type == Continue) {
       Ret->list.push_back(Builder.makeShapeContinue(Ancestor->Id));
     }
@@ -908,9 +906,14 @@ void Relooper::Calculate(Block *Entry) {
             // if we can reach it from outside this set of blocks, then we must check the label variable
             // to do so. Otherwise, if it is just internal blocks, those can always be jumped to forward,
             // without using the label variable
-            BlockSet Intersection;
-            std::set_intersection(InitialEntries.begin(), InitialEntries.end(), Entries->begin(), Entries->end(), Intersection.begin());
-            Make(MakeMultiple(Blocks, *Entries, IndependentGroups, *NextEntries, Intersection.size() > 0));
+            bool Checked = false;
+            for (auto* Entry : *Entries) {
+              if (InitialEntries.count(Entry)) {
+                Checked = true;
+                break;
+              }
+            }
+            Make(MakeMultiple(Blocks, *Entries, IndependentGroups, *NextEntries, Checked));
           }
         }
         // No independent groups, must be loopable ==> Loop
