@@ -53,15 +53,17 @@ public:
   wasm::Binary* makeCheckLabel(wasm::Index value) {
     return makeBinary(wasm::EqInt32, makeGetLabel(), makeConst(wasm::Literal(int32_t(value))));
   }
-  wasm::Break* makeShapeBreak(int id) {
+  // breaks are towards blocks, as they are always forward
+  wasm::Break* makeBlockBreak(int id) {
     return wasm::Builder::makeBreak(getBreakName(id));
   }
+  // continues are on shapes
   wasm::Break* makeShapeContinue(int id) {
     return wasm::Builder::makeBreak(getContinueName(id));
   }
 
   wasm::Name getBreakName(int id) {
-    return wasm::Name(std::string("shape$") + std::to_string(id) + "$break");
+    return wasm::Name(std::string("block$") + std::to_string(id) + "$break");
   }
   wasm::Name getContinueName(int id) {
     return wasm::Name(std::string("shape$") + std::to_string(id) + "$continue");

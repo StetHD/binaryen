@@ -18,6 +18,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+#include <algorithm>
 #include <list>
 #include <stack>
 #include <string>
@@ -38,6 +40,27 @@ static void PrintDebug(const char *Format, ...);
 #define DebugDump(x, ...)
 #endif
 
+// Rendering utilities
+
+static wasm::Expression* HandleFollowupMultiples(wasm::Block* Ret, Shape* Parent, RelooperBuilder& Builder, bool InLoop) {
+  // for each multiple after us, we create a block target for breaks to reach
+  while (Parent->Next) {
+    auto* Multiple = Shape::IsMultiple(Parent->Next);
+    if (!Multiple) break;
+    for (auto& iter : Multiple->InnerMap) {
+      int Id = iter->first;
+      Shape* Body = iter->second;
+      Ret->name = Builder.getBreakName(Id);
+      auto* Outer = Builder.makeBlock(Ret);
+      Outer->list.push_back(Body->Render(Builder, InLoop));
+      Outer->finalize(); // TODO: not really necessary
+      Ret = Outer;
+    }
+    Parent->Next = Parent->Next->Next;
+  }
+  return Ret;
+}
+
 // Branch
 
 Branch::Branch(wasm::Expression* ConditionInit, wasm::Expression* CodeInit) : Ancestor(nullptr), Condition(ConditionInit), Code(CodeInit) {}
@@ -55,7 +78,7 @@ wasm::Expression* Branch::Render(RelooperBuilder& Builder, Block *Target, bool S
   if (SetLabel) Ret->list.push_back(Builder.makeSetLabel(Target->Id));
   if (Ancestor) {
     if (Type == Break) {
-      Ret->list.push_back(Builder.makeShapeBreak(Ancestor->Id));
+      Ret->list.push_back(Builder.makeBlockBreak(Target->Id));
     } else if (Type == Continue) {
       Ret->list.push_back(Builder.makeShapeContinue(Ancestor->Id));
     }
@@ -285,15 +308,8 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
   }
 
   if (Root) {
-    if (Fused) {
-      // We are fusing a multiple into this simple
-      auto* Block = Builder.makeBlock(Root);
-      Block->name = Builder.getBreakName(Fused->Id);
-      Root = Block;
-    }
     Ret->list.push_back(Root);
   }
-
   Ret->finalize();
 
   return Ret;
@@ -303,6 +319,7 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
 
 wasm::Expression* SimpleShape::Render(RelooperBuilder& Builder, bool InLoop) {
   auto* Ret = Inner->Render(Builder, InLoop);
+  Ret = HandleFollowupMultiples(Ret, this, Builder, InLoop);
   if (Next) {
     Ret = Builder.makeSequence(Ret, Next->Render(Builder, InLoop));
   }
@@ -329,7 +346,7 @@ wasm::Expression* MultipleShape::Render(RelooperBuilder& Builder, bool InLoop) {
     }
   }
   auto* Ret = Builder.makeBlock(FirstIf);
-  Ret->name = Builder.getBreakName(Id);
+  Ret = HandleFollowupMultiples(Ret, this, Builder, InLoop);
   if (Next) {
     Ret = Builder.makeSequence(Ret, Next->Render(Builder, InLoop));
   }
@@ -339,7 +356,8 @@ wasm::Expression* MultipleShape::Render(RelooperBuilder& Builder, bool InLoop) {
 // LoopShape
 
 wasm::Expression* LoopShape::Render(RelooperBuilder& Builder, bool InLoop) {
-  wasm::Expression* Ret = Builder.makeLoop(Builder.getBreakName(Id), Builder.getContinueName(Id), Inner->Render(Builder, true));
+  wasm::Expression* Ret = Builder.makeLoop(wasm::Name(), Builder.getContinueName(Id), Inner->Render(Builder, true));
+  Ret = HandleFollowupMultiples(Ret, this, Builder, InLoop);
   if (Next) {
     Ret = Builder.makeSequence(Ret, Next->Render(Builder, InLoop));
   }
@@ -853,8 +871,13 @@ void Relooper::Calculate(Block *Entry) {
 
           if (IndependentGroups.size() > 0) {
             // Some groups removable ==> Multiple
-            //                                                                   checked multiple if prev is not simple (in which case we would be fused)
-            Make(MakeMultiple(Blocks, *Entries, IndependentGroups, *NextEntries, !(Shape::IsSimple(Prev))));
+            // This is a checked multiple if it has an entry that is an entry to this Process call, that is,
+            // if we can reach it from outside this set of blocks, then we must check the label variable
+            // to do so. Otherwise, if it is just internal blocks, those can always be jumped to forward,
+            // without using the label variable
+            BlockSet Intersection;
+            std::set_intersection(InitialEntries.begin(), InitialEntries.end(), Entries->begin(), Entries->end(), Intersection.begin());
+            Make(MakeMultiple(Blocks, *Entries, IndependentGroups, *NextEntries, Intersection.size() > 0));
           }
         }
         // No independent groups, must be loopable ==> Loop
