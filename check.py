@@ -659,7 +659,7 @@ for t in sorted(os.listdir(os.path.join('test', 'example'))):
     actual, err = proc.communicate()
     assert proc.returncode == 0, [proc.returncode, actual, err]
   finally:
-    os.remove(output_file)
+    #os.remove(output_file)
     if sys.platform == 'darwin':
       # Also removes debug directory produced on Mac OS
       shutil.rmtree(output_file + '.dSYM')

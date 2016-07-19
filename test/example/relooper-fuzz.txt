@@ -156,15 +156,12 @@
       (i32.const 0)
     )
     (if
-      (i32.eq
+      (i32.ne
         (i32.rem_u
           (call $check)
           (i32.const 2)
         )
         (i32.const 0)
-      )
-      (set_local $0
-        (i32.const 6)
       )
       (block
         (call_import $print
@@ -173,16 +170,13 @@
         (call $check)
       )
     )
-    (loop $shape$3$break $shape$3$continue
+    (loop $shape$3$continue
       (if
         (i32.eq
-          (get_local $0)
+          (get_local $1)
           (i32.const 6)
         )
         (block
-          (set_local $0
-            (i32.const 0)
-          )
           (call_import $print
             (i32.const 5)
           )
@@ -195,12 +189,7 @@
               (i32.const 0)
             )
             (br $shape$3$continue)
-            (block
-              (set_local $0
-                (i32.const 6)
-              )
-              (br $shape$3$continue)
-            )
+            (br $shape$3$continue)
           )
         )
       )
@@ -210,7 +199,7 @@
       (if
         (i32.eq
           (i32.rem_u
-            (set_local $1
+            (set_local $0
               (call $check)
             )
             (i32.const 3)
@@ -218,19 +207,13 @@
           (i32.const 0)
         )
         (br $shape$3$continue)
-        (if
+        (br_if $shape$3$continue
           (i32.eq
             (i32.rem_u
-              (get_local $1)
+              (get_local $0)
               (i32.const 3)
             )
             (i32.const 1)
-          )
-          (block
-            (set_local $0
-              (i32.const 6)
-            )
-            (br $shape$3$continue)
           )
         )
       )
@@ -238,9 +221,6 @@
         (i32.const 2)
       )
       (call $check)
-      (set_local $0
-        (i32.const 6)
-      )
       (br $shape$3$continue)
     )
   )

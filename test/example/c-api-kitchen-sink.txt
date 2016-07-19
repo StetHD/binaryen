@@ -377,7 +377,7 @@ raw:
   )
   (func $two-blocks (type $v)
     (local $0 i32)
-    (block
+    (block $block$2$break
       (i32.const 0)
     )
     (block
@@ -386,7 +386,7 @@ raw:
   )
   (func $two-blocks-plus-code (type $v)
     (local $0 i32)
-    (block
+    (block $block$2$break
       (i32.const 0)
       (block
         (i32.const 77)
@@ -398,8 +398,8 @@ raw:
   )
   (func $loop (type $v)
     (local $0 i32)
-    (loop $shape$0$break $shape$0$continue
-      (block
+    (loop $shape$0$continue
+      (block $block$2$break
         (i32.const 0)
       )
       (block
@@ -412,8 +412,8 @@ raw:
   )
   (func $loop-plus-code (type $v)
     (local $0 i32)
-    (loop $shape$0$break $shape$0$continue
-      (block
+    (loop $shape$0$continue
+      (block $block$2$break
         (i32.const 0)
         (block
           (i32.const 33)
@@ -431,51 +431,45 @@ raw:
   (func $split (type $v)
     (local $0 i32)
     (i32.const 0)
-    (block $shape$1$break
-      (if
-        (i32.const 55)
-        (block
-          (i32.const 1)
-        )
-        (block
-          (i32.const 2)
-        )
+    (if
+      (i32.const 55)
+      (block
+        (i32.const 1)
+      )
+      (block
+        (i32.const 2)
       )
     )
   )
   (func $split-plus-code (type $v)
     (local $0 i32)
     (i32.const 0)
-    (block $shape$1$break
-      (if
-        (i32.const 55)
+    (if
+      (i32.const 55)
+      (block
+        (i32.const 10)
         (block
-          (i32.const 10)
-          (block
-            (i32.const 1)
-          )
+          (i32.const 1)
         )
+      )
+      (block
+        (i32.const 20)
         (block
-          (i32.const 20)
-          (block
-            (i32.const 2)
-          )
+          (i32.const 2)
         )
       )
     )
   )
   (func $if (type $v)
     (local $0 i32)
-    (block
+    (block $block$3$break
       (i32.const 0)
-      (block $shape$1$break
-        (if
-          (i32.const 55)
+      (if
+        (i32.const 55)
+        (block
+          (i32.const 1)
           (block
-            (i32.const 1)
-            (block
-              (br $shape$1$break)
-            )
+            (br $block$3$break)
           )
         )
       )
@@ -486,23 +480,21 @@ raw:
   )
   (func $if-plus-code (type $v)
     (local $0 i32)
-    (block
+    (block $block$3$break
       (i32.const 0)
-      (block $shape$1$break
-        (if
-          (i32.const 55)
+      (if
+        (i32.const 55)
+        (block
+          (i32.const -1)
           (block
-            (i32.const -1)
+            (i32.const 1)
             (block
-              (i32.const 1)
-              (block
-                (i32.const -3)
-                (br $shape$1$break)
-              )
+              (i32.const -3)
+              (br $block$3$break)
             )
           )
-          (i32.const -2)
         )
+        (i32.const -2)
       )
     )
     (block
@@ -511,22 +503,20 @@ raw:
   )
   (func $if-else (type $v)
     (local $0 i32)
-    (block
+    (block $block$4$break
       (i32.const 0)
-      (block $shape$1$break
-        (if
-          (i32.const 55)
+      (if
+        (i32.const 55)
+        (block
+          (i32.const 1)
           (block
-            (i32.const 1)
-            (block
-              (br $shape$1$break)
-            )
+            (br $block$4$break)
           )
+        )
+        (block
+          (i32.const 2)
           (block
-            (i32.const 2)
-            (block
-              (br $shape$1$break)
-            )
+            (br $block$4$break)
           )
         )
       )
@@ -537,16 +527,18 @@ raw:
   )
   (func $loop-tail (type $v)
     (local $0 i32)
-    (loop $shape$0$break $shape$0$continue
-      (block
-        (i32.const 0)
-      )
-      (block
-        (i32.const 1)
-        (if
-          (i32.const 10)
-          (br $shape$0$continue)
-          (br $shape$0$break)
+    (block $block$3$break
+      (loop $shape$0$continue
+        (block $block$2$break
+          (i32.const 0)
+        )
+        (block
+          (i32.const 1)
+          (if
+            (i32.const 10)
+            (br $shape$0$continue)
+            (br $block$3$break)
+          )
         )
       )
     )
@@ -556,115 +548,100 @@ raw:
   )
   (func $nontrivial-loop-plus-phi-to-head (type $v)
     (local $0 i32)
-    (block
+    (block $block$2$break
       (i32.const 0)
       (block
         (i32.const 10)
       )
     )
     (block
-      (loop $shape$1$break $shape$1$continue
-        (block
-          (i32.const 1)
-          (if
-            (i32.eqz
-              (i32.const -2)
+      (block $block$7$break
+        (block $block$4$break
+          (loop $shape$1$continue
+            (block $block$3$break
+              (i32.const 1)
+              (if
+                (i32.eqz
+                  (i32.const -2)
+                )
+                (block
+                  (i32.const 20)
+                  (br $block$7$break)
+                )
+              )
             )
             (block
-              (i32.const 20)
-              (br $shape$1$break)
+              (i32.const 2)
+              (if
+                (i32.const -6)
+                (br $block$4$break)
+                (block
+                  (i32.const 30)
+                  (br $shape$1$continue)
+                )
+              )
             )
           )
         )
         (block
-          (i32.const 2)
-          (if
-            (i32.const -6)
-            (block
-              (set_local $0
+          (block $block$6$break
+            (i32.const 3)
+            (if
+              (i32.const -10)
+              (block
                 (i32.const 4)
+                (block
+                  (br $block$6$break)
+                )
               )
-              (br $shape$1$break)
             )
+          )
+          (block
+            (i32.const 5)
             (block
-              (i32.const 30)
-              (br $shape$1$continue)
+              (i32.const 40)
+              (br $block$7$break)
             )
           )
         )
       )
       (block
-        (block $shape$4$break
-          (if
-            (i32.eq
-              (get_local $0)
-              (i32.const 4)
-            )
-            (block
-              (block
-                (i32.const 3)
-                (block $shape$6$break
-                  (if
-                    (i32.const -10)
-                    (block
-                      (i32.const 4)
-                      (block
-                        (br $shape$6$break)
-                      )
-                    )
-                  )
-                )
-              )
-              (block
-                (i32.const 5)
-                (block
-                  (i32.const 40)
-                  (br $shape$4$break)
-                )
-              )
-            )
-          )
-        )
-        (block
-          (i32.const 6)
-        )
+        (i32.const 6)
       )
     )
   )
   (func $switch (type $v)
     (local $0 i32)
     (i32.const 0)
-    (block $shape$1$break
-      (block $switch$1$leave
-        (block $switch$1$default
-          (block $switch$1$case$3
-            (block $switch$1$case$2
-              (br_table $switch$1$default $switch$1$default $switch$1$case$2 $switch$1$default $switch$1$case$3 $switch$1$case$2 $switch$1$default
-                (i32.const -99)
-              )
+    (block $switch$1$leave
+      (block $switch$1$default
+        (block $switch$1$case$3
+          (block $switch$1$case$2
+            (br_table $switch$1$default $switch$1$default $switch$1$case$2 $switch$1$default $switch$1$case$3 $switch$1$case$2 $switch$1$default
+              (i32.const -99)
             )
-            (block
-              (block
-                (i32.const 1)
-              )
-            )
-            (br $switch$1$leave)
           )
           (block
-            (i32.const 55)
             (block
-              (i32.const 2)
+              (i32.const 1)
             )
           )
           (br $switch$1$leave)
         )
         (block
+          (i32.const 55)
           (block
-            (i32.const 3)
+            (i32.const 2)
           )
         )
         (br $switch$1$leave)
       )
+      (block
+        (block
+          (i32.const 3)
+        )
+      )
+      (br $switch$1$leave)
     )
   )
   (func $duffs-device (type $v)
@@ -676,33 +653,22 @@ raw:
     (local $5 f64)
     (local $6 i32)
     (block
-      (i32.const 0)
-      (if
-        (i32.const 10)
-        (set_local $3
-          (i32.const 2)
-        )
-        (set_local $3
-          (i32.const 3)
+      (block $block$3$break
+        (block $block$2$break
+          (i32.const 0)
         )
       )
     )
-    (loop $shape$1$break $shape$1$continue
-      (block $shape$2$break
+    (block
+      (loop $shape$1$continue
         (if
           (i32.eq
             (get_local $3)
             (i32.const 2)
           )
           (block
-            (set_local $3
-              (i32.const 0)
-            )
             (i32.const 1)
             (block
-              (set_local $3
-                (i32.const 3)
-              )
               (br $shape$1$continue)
             )
           )
@@ -712,14 +678,8 @@ raw:
               (i32.const 3)
             )
             (block
-              (set_local $3
-                (i32.const 0)
-              )
               (i32.const 2)
               (block
-                (set_local $3
-                  (i32.const 2)
-                )
                 (br $shape$1$continue)
               )
             )
@@ -745,38 +705,6 @@ optimized:
   (type $i (func (result i32)))
   (func $just-one-block (type $v)
     (nop)
-  )
-  (func $duffs-device (type $v)
-    (local $0 i32)
-    (set_local $0
-      (i32.const 2)
-    )
-    (loop $shape$1$break $shape$1$continue
-      (if
-        (i32.eq
-          (get_local $0)
-          (i32.const 2)
-        )
-        (block
-          (set_local $0
-            (i32.const 3)
-          )
-          (br $shape$1$continue)
-        )
-        (if
-          (i32.eq
-            (get_local $0)
-            (i32.const 3)
-          )
-          (block
-            (set_local $0
-              (i32.const 2)
-            )
-            (br $shape$1$continue)
-          )
-        )
-      )
-    )
   )
   (func $return (type $i) (result i32)
     (i32.const 1337)
@@ -1787,7 +1715,7 @@ raw:
   )
   (func $two-blocks (type $v)
     (local $0 i32)
-    (block
+    (block $block$2$break
       (i32.const 0)
     )
     (block
@@ -1796,7 +1724,7 @@ raw:
   )
   (func $two-blocks-plus-code (type $v)
     (local $0 i32)
-    (block
+    (block $block$2$break
       (i32.const 0)
       (block
         (i32.const 77)
@@ -1808,8 +1736,8 @@ raw:
   )
   (func $loop (type $v)
     (local $0 i32)
-    (loop $shape$0$break $shape$0$continue
-      (block
+    (loop $shape$0$continue
+      (block $block$2$break
         (i32.const 0)
       )
       (block
@@ -1822,8 +1750,8 @@ raw:
   )
   (func $loop-plus-code (type $v)
     (local $0 i32)
-    (loop $shape$0$break $shape$0$continue
-      (block
+    (loop $shape$0$continue
+      (block $block$2$break
         (i32.const 0)
         (block
           (i32.const 33)
@@ -1841,51 +1769,45 @@ raw:
   (func $split (type $v)
     (local $0 i32)
     (i32.const 0)
-    (block $shape$1$break
-      (if
-        (i32.const 55)
-        (block
-          (i32.const 1)
-        )
-        (block
-          (i32.const 2)
-        )
+    (if
+      (i32.const 55)
+      (block
+        (i32.const 1)
+      )
+      (block
+        (i32.const 2)
       )
     )
   )
   (func $split-plus-code (type $v)
     (local $0 i32)
     (i32.const 0)
-    (block $shape$1$break
-      (if
-        (i32.const 55)
+    (if
+      (i32.const 55)
+      (block
+        (i32.const 10)
         (block
-          (i32.const 10)
-          (block
-            (i32.const 1)
-          )
+          (i32.const 1)
         )
+      )
+      (block
+        (i32.const 20)
         (block
-          (i32.const 20)
-          (block
-            (i32.const 2)
-          )
+          (i32.const 2)
         )
       )
     )
   )
   (func $if (type $v)
     (local $0 i32)
-    (block
+    (block $block$3$break
       (i32.const 0)
-      (block $shape$1$break
-        (if
-          (i32.const 55)
+      (if
+        (i32.const 55)
+        (block
+          (i32.const 1)
           (block
-            (i32.const 1)
-            (block
-              (br $shape$1$break)
-            )
+            (br $block$3$break)
           )
         )
       )
@@ -1896,23 +1818,21 @@ raw:
   )
   (func $if-plus-code (type $v)
     (local $0 i32)
-    (block
+    (block $block$3$break
       (i32.const 0)
-      (block $shape$1$break
-        (if
-          (i32.const 55)
+      (if
+        (i32.const 55)
+        (block
+          (i32.const -1)
           (block
-            (i32.const -1)
+            (i32.const 1)
             (block
-              (i32.const 1)
-              (block
-                (i32.const -3)
-                (br $shape$1$break)
-              )
+              (i32.const -3)
+              (br $block$3$break)
             )
           )
-          (i32.const -2)
         )
+        (i32.const -2)
       )
     )
     (block
@@ -1921,22 +1841,20 @@ raw:
   )
   (func $if-else (type $v)
     (local $0 i32)
-    (block
+    (block $block$4$break
       (i32.const 0)
-      (block $shape$1$break
-        (if
-          (i32.const 55)
+      (if
+        (i32.const 55)
+        (block
+          (i32.const 1)
           (block
-            (i32.const 1)
-            (block
-              (br $shape$1$break)
-            )
+            (br $block$4$break)
           )
+        )
+        (block
+          (i32.const 2)
           (block
-            (i32.const 2)
-            (block
-              (br $shape$1$break)
-            )
+            (br $block$4$break)
           )
         )
       )
@@ -1947,16 +1865,18 @@ raw:
   )
   (func $loop-tail (type $v)
     (local $0 i32)
-    (loop $shape$0$break $shape$0$continue
-      (block
-        (i32.const 0)
-      )
-      (block
-        (i32.const 1)
-        (if
-          (i32.const 10)
-          (br $shape$0$continue)
-          (br $shape$0$break)
+    (block $block$3$break
+      (loop $shape$0$continue
+        (block $block$2$break
+          (i32.const 0)
+        )
+        (block
+          (i32.const 1)
+          (if
+            (i32.const 10)
+            (br $shape$0$continue)
+            (br $block$3$break)
+          )
         )
       )
     )
@@ -1966,115 +1886,100 @@ raw:
   )
   (func $nontrivial-loop-plus-phi-to-head (type $v)
     (local $0 i32)
-    (block
+    (block $block$2$break
       (i32.const 0)
       (block
         (i32.const 10)
       )
     )
     (block
-      (loop $shape$1$break $shape$1$continue
-        (block
-          (i32.const 1)
-          (if
-            (i32.eqz
-              (i32.const -2)
+      (block $block$7$break
+        (block $block$4$break
+          (loop $shape$1$continue
+            (block $block$3$break
+              (i32.const 1)
+              (if
+                (i32.eqz
+                  (i32.const -2)
+                )
+                (block
+                  (i32.const 20)
+                  (br $block$7$break)
+                )
+              )
             )
             (block
-              (i32.const 20)
-              (br $shape$1$break)
+              (i32.const 2)
+              (if
+                (i32.const -6)
+                (br $block$4$break)
+                (block
+                  (i32.const 30)
+                  (br $shape$1$continue)
+                )
+              )
             )
           )
         )
         (block
-          (i32.const 2)
-          (if
-            (i32.const -6)
-            (block
-              (set_local $0
+          (block $block$6$break
+            (i32.const 3)
+            (if
+              (i32.const -10)
+              (block
                 (i32.const 4)
+                (block
+                  (br $block$6$break)
+                )
               )
-              (br $shape$1$break)
             )
+          )
+          (block
+            (i32.const 5)
             (block
-              (i32.const 30)
-              (br $shape$1$continue)
+              (i32.const 40)
+              (br $block$7$break)
             )
           )
         )
       )
       (block
-        (block $shape$4$break
-          (if
-            (i32.eq
-              (get_local $0)
-              (i32.const 4)
-            )
-            (block
-              (block
-                (i32.const 3)
-                (block $shape$6$break
-                  (if
-                    (i32.const -10)
-                    (block
-                      (i32.const 4)
-                      (block
-                        (br $shape$6$break)
-                      )
-                    )
-                  )
-                )
-              )
-              (block
-                (i32.const 5)
-                (block
-                  (i32.const 40)
-                  (br $shape$4$break)
-                )
-              )
-            )
-          )
-        )
-        (block
-          (i32.const 6)
-        )
+        (i32.const 6)
       )
     )
   )
   (func $switch (type $v)
     (local $0 i32)
     (i32.const 0)
-    (block $shape$1$break
-      (block $switch$1$leave
-        (block $switch$1$default
-          (block $switch$1$case$3
-            (block $switch$1$case$2
-              (br_table $switch$1$default $switch$1$default $switch$1$case$2 $switch$1$default $switch$1$case$3 $switch$1$case$2 $switch$1$default
-                (i32.const -99)
-              )
+    (block $switch$1$leave
+      (block $switch$1$default
+        (block $switch$1$case$3
+          (block $switch$1$case$2
+            (br_table $switch$1$default $switch$1$default $switch$1$case$2 $switch$1$default $switch$1$case$3 $switch$1$case$2 $switch$1$default
+              (i32.const -99)
             )
-            (block
-              (block
-                (i32.const 1)
-              )
-            )
-            (br $switch$1$leave)
           )
           (block
-            (i32.const 55)
             (block
-              (i32.const 2)
+              (i32.const 1)
             )
           )
           (br $switch$1$leave)
         )
         (block
+          (i32.const 55)
           (block
-            (i32.const 3)
+            (i32.const 2)
           )
         )
         (br $switch$1$leave)
       )
+      (block
+        (block
+          (i32.const 3)
+        )
+      )
+      (br $switch$1$leave)
     )
   )
   (func $duffs-device (type $v)
@@ -2086,33 +1991,22 @@ raw:
     (local $5 f64)
     (local $6 i32)
     (block
-      (i32.const 0)
-      (if
-        (i32.const 10)
-        (set_local $3
-          (i32.const 2)
-        )
-        (set_local $3
-          (i32.const 3)
+      (block $block$3$break
+        (block $block$2$break
+          (i32.const 0)
         )
       )
     )
-    (loop $shape$1$break $shape$1$continue
-      (block $shape$2$break
+    (block
+      (loop $shape$1$continue
         (if
           (i32.eq
             (get_local $3)
             (i32.const 2)
           )
           (block
-            (set_local $3
-              (i32.const 0)
-            )
             (i32.const 1)
             (block
-              (set_local $3
-                (i32.const 3)
-              )
               (br $shape$1$continue)
             )
           )
@@ -2122,14 +2016,8 @@ raw:
               (i32.const 3)
             )
             (block
-              (set_local $3
-                (i32.const 0)
-              )
               (i32.const 2)
               (block
-                (set_local $3
-                  (i32.const 2)
-                )
                 (br $shape$1$continue)
               )
             )
@@ -2159,38 +2047,6 @@ optimized:
   (type $i (func (result i32)))
   (func $just-one-block (type $v)
     (nop)
-  )
-  (func $duffs-device (type $v)
-    (local $0 i32)
-    (set_local $0
-      (i32.const 2)
-    )
-    (loop $shape$1$break $shape$1$continue
-      (if
-        (i32.eq
-          (get_local $0)
-          (i32.const 2)
-        )
-        (block
-          (set_local $0
-            (i32.const 3)
-          )
-          (br $shape$1$continue)
-        )
-        (if
-          (i32.eq
-            (get_local $0)
-            (i32.const 3)
-          )
-          (block
-            (set_local $0
-              (i32.const 2)
-            )
-            (br $shape$1$continue)
-          )
-        )
-      )
-    )
   )
   (func $return (type $i) (result i32)
     (i32.const 1337)

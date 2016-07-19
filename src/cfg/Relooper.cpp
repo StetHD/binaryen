@@ -62,7 +62,32 @@ static wasm::Expression* HandleFollowupMultiples(wasm::Expression* Ret, Shape* P
     }
     Parent->Next = Parent->Next->Next;
   }
-  Curr->name = Builder.getShapeBreakName(Parent->Id); // to break out of the whole thing
+  // after the multiples is a simple or a loop, in both cases we must hit an entry
+  // block, and so this is the last one we need to take into account now (this
+  // is why we require that loops hit an entry).
+  if (Parent->Next) {
+    auto* Simple = Shape::IsSimple(Parent->Next);
+    if (Simple) {
+      // breaking on the next block's id takes us out, where we
+      // will reach its rendering
+      Curr->name = Builder.getBlockBreakName(Simple->Inner->Id);
+    } else {
+      // add one break target per entry for the loop
+      auto* Loop = Shape::IsLoop(Parent->Next);
+      assert(Loop);
+      assert(Loop->Entries.size() > 0);
+      if (Loop->Entries.size() == 1) {
+        Curr->name = Builder.getBlockBreakName((*Loop->Entries.begin())->Id);
+      } else {
+        for (auto* Entry : Loop->Entries) {
+          Curr->name = Builder.getBlockBreakName(Entry->Id);
+          auto* Outer = Builder.makeBlock(Curr);
+          Outer->finalize(); // TODO: not really necessary
+          Curr = Outer;
+        }
+      }
+    }
+  }
   return Curr;
 }
 
@@ -595,18 +620,6 @@ void Relooper::Calculate(Block *Entry) {
       Shape *Inner = Process(InnerBlocks, Entries);
       Loop->Inner = Inner;
       Loop->Entries = Entries;
-      // Make sure we have the property of visiting one of our entries
-      {
-        bool VisitedEntry = false;
-        while (Inner) {
-          if (Shape::IsSimple(Inner) || Shape::IsLoop(Inner)) {
-            VisitedEntry = true;
-            break;
-          }
-          Inner = Inner->Next;
-        }
-        assert(VisitedEntry);
-      }
       return Loop;
     }
 

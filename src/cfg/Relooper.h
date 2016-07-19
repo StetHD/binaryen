@@ -151,12 +151,14 @@ struct InsertOrderedSet
 
   InsertOrderedSet() {}
   InsertOrderedSet(const InsertOrderedSet& other) {
+    *this = other;
+  }
+  InsertOrderedSet& operator=(const InsertOrderedSet& other) {
+    clear();
     for (auto i : other.List) {
       insert(i); // inserting manually creates proper iterators
     }
-  }
-  InsertOrderedSet& operator=(const InsertOrderedSet& other) {
-    abort(); // TODO, watch out for iterators
+    return *this;
   }
 };
 
