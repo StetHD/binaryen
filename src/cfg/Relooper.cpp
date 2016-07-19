@@ -42,23 +42,28 @@ static void PrintDebug(const char *Format, ...);
 
 // Rendering utilities
 
-static wasm::Expression* HandleFollowupMultiples(wasm::Block* Ret, Shape* Parent, RelooperBuilder& Builder, bool InLoop) {
+static wasm::Expression* HandleFollowupMultiples(wasm::Expression* Ret, Shape* Parent, RelooperBuilder& Builder, bool InLoop) {
+  auto* Curr = Ret->dynCast<wasm::Block>();
+  if (!Curr) {
+    Curr = Builder.makeBlock(Ret);
+  }
   // for each multiple after us, we create a block target for breaks to reach
   while (Parent->Next) {
     auto* Multiple = Shape::IsMultiple(Parent->Next);
     if (!Multiple) break;
     for (auto& iter : Multiple->InnerMap) {
-      int Id = iter->first;
-      Shape* Body = iter->second;
-      Ret->name = Builder.getBreakName(Id);
-      auto* Outer = Builder.makeBlock(Ret);
+      int Id = iter.first;
+      Shape* Body = iter.second;
+      Curr->name = Builder.getBlockBreakName(Id);
+      auto* Outer = Builder.makeBlock(Curr);
       Outer->list.push_back(Body->Render(Builder, InLoop));
       Outer->finalize(); // TODO: not really necessary
-      Ret = Outer;
+      Curr = Outer;
     }
     Parent->Next = Parent->Next->Next;
   }
-  return Ret;
+  Curr->name = Builder.getShapeBreakName(Parent->Id); // to break out of the whole thing
+  return Curr;
 }
 
 // Branch
@@ -79,6 +84,7 @@ wasm::Expression* Branch::Render(RelooperBuilder& Builder, Block *Target, bool S
   if (Ancestor) {
     if (Type == Break) {
       Ret->list.push_back(Builder.makeBlockBreak(Target->Id));
+// XXX
     } else if (Type == Continue) {
       Ret->list.push_back(Builder.makeShapeContinue(Ancestor->Id));
     }
@@ -345,7 +351,7 @@ wasm::Expression* MultipleShape::Render(RelooperBuilder& Builder, bool InLoop) {
       CurrIf = Now;
     }
   }
-  auto* Ret = Builder.makeBlock(FirstIf);
+  wasm::Expression* Ret = Builder.makeBlock(FirstIf);
   Ret = HandleFollowupMultiples(Ret, this, Builder, InLoop);
   if (Next) {
     Ret = Builder.makeSequence(Ret, Next->Render(Builder, InLoop));
@@ -588,6 +594,19 @@ void Relooper::Calculate(Block *Entry) {
       // Finish up
       Shape *Inner = Process(InnerBlocks, Entries);
       Loop->Inner = Inner;
+      Loop->Entries = Entries;
+      // Make sure we have the property of visiting one of our entries
+      {
+        bool VisitedEntry = false;
+        while (Inner) {
+          if (Shape::IsSimple(Inner) || Shape::IsLoop(Inner)) {
+            VisitedEntry = true;
+            break;
+          }
+          Inner = Inner->Next;
+        }
+        assert(VisitedEntry);
+      }
       return Loop;
     }
 
@@ -808,7 +827,8 @@ void Relooper::Calculate(Block *Entry) {
         if (IndependentGroups.size() > 0) {
           // We can handle a group in a multiple if its entry cannot be reached by another group.
           // Note that it might be reachable by itself - a loop. But that is fine, we will create
-          // a loop inside the multiple block (which is the performant order to do it).
+          // a loop inside the multiple block, which is both the performant order to do it, and
+          // preserves the property that a loop will always reach an entry.
           for (BlockBlockSetMap::iterator iter = IndependentGroups.begin(); iter != IndependentGroups.end();) {
             Block *Entry = iter->first;
             BlockSet &Group = iter->second;

@@ -53,17 +53,22 @@ public:
   wasm::Binary* makeCheckLabel(wasm::Index value) {
     return makeBinary(wasm::EqInt32, makeGetLabel(), makeConst(wasm::Literal(int32_t(value))));
   }
-  // breaks are towards blocks, as they are always forward
   wasm::Break* makeBlockBreak(int id) {
-    return wasm::Builder::makeBreak(getBreakName(id));
+    return wasm::Builder::makeBreak(getBlockBreakName(id));
   }
-  // continues are on shapes
+  wasm::Break* makeShapeBreak(int id) {
+    return wasm::Builder::makeBreak(getShapeBreakName(id));
+  }
+  // continues are always on shapes
   wasm::Break* makeShapeContinue(int id) {
     return wasm::Builder::makeBreak(getContinueName(id));
   }
 
-  wasm::Name getBreakName(int id) {
+  wasm::Name getBlockBreakName(int id) {
     return wasm::Name(std::string("block$") + std::to_string(id) + "$break");
+  }
+  wasm::Name getShapeBreakName(int id) {
+    return wasm::Name(std::string("shape$") + std::to_string(id) + "$break");
   }
   wasm::Name getContinueName(int id) {
     return wasm::Name(std::string("shape$") + std::to_string(id) + "$continue");
@@ -243,15 +248,20 @@ struct Block {
 
 // Represents a structured control flow shape, one of
 //
-//  Simple: No control flow at all, just instructions. If several
-//          blocks, then 
+//  Simple: No control flow at all, just instructions in a single
+//          basic block.
 //
-//  Multiple: A shape with more than one entry. If the next block to
-//            be entered is among them, we run it and continue to
-//            the next shape, otherwise we continue immediately to the
-//            next shape.
+//  Multiple: A shape with at least one entry. We may visit one of
+//            the entries, or none, before continuing to the next
+//            shape after this.
 //
-//  Loop: An infinite loop.
+//  Loop: An infinite loop. We assume the property that a loop
+//        will always visit one of its entries, and so for example
+//        we cannot have a loop containing a multiple and nothing
+//        else (since we might not visit any of the multiple's
+//        blocks). Multiple entries are possible for the block,
+//        however, which is necessary for irreducible control
+//        flow, of course.
 //
 
 struct SimpleShape;
@@ -287,7 +297,6 @@ struct SimpleShape : public Shape {
   wasm::Expression* Render(RelooperBuilder& Builder, bool InLoop) override;
 };
 
-// Blocks with the same id were split and are identical, so we just care about ids in Multiple entries
 typedef std::map<int, Shape*> IdShapeMap;
 
 struct MultipleShape : public Shape {
@@ -300,6 +309,8 @@ struct MultipleShape : public Shape {
 
 struct LoopShape : public Shape {
   Shape *Inner;
+
+  BlockSet Entries; // we must visit at least one of these
 
   LoopShape() : Shape(Loop), Inner(NULL) {}
   wasm::Expression* Render(RelooperBuilder& Builder, bool InLoop) override;
