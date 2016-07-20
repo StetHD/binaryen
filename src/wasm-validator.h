@@ -316,6 +316,7 @@ public:
       for (auto& target : breakTypes) {
         std::cerr << " - " << target.first << '\n';
       }
+      breakTypes.clear();
     }
   }
 
