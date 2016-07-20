@@ -289,6 +289,10 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
       // generate the content for this block
       bool SetCurrLabel = SetLabel && Target->IsCheckedMultipleEntry;
       bool HasFusedContent = Fused && contains(Fused->InnerMap, Target->Id);
+      if (HasFusedContent) {
+        assert(Details->Type == Branch::Break);
+        Details->Type = Branch::Direct;
+      }
       wasm::Expression* CurrContent = nullptr;
       if (SetCurrLabel || Details->Type != Branch::Direct || HasFusedContent || Details->Code) {
         CurrContent = Details->Render(Builder, Target, SetCurrLabel);
