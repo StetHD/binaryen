@@ -312,7 +312,11 @@ public:
 
   void doWalkFunction(Function* func) {
     PostWalker<WasmValidator, Visitor<WasmValidator>>::doWalkFunction(func);
-    shouldBeTrue(breakTypes.size() == 0, "break targets", "all break targets must be valid");
+    if (!shouldBeTrue(breakTypes.size() == 0, "break targets", "all break targets must be valid")) {
+      for (auto& target : breakTypes) {
+        std::cerr << " - " << target.first << '\n';
+      }
+    }
   }
 
 private:

@@ -83,9 +83,7 @@ struct Branch {
   enum FlowType {
     Direct = 0,   // We will directly reach the right location through other means, no need for continue or break
     Break = 1,
-    Continue = 2,
-    Nested = 3    // This code is directly reached, but we must be careful to ensure it is nested in an if - it is not reached
-                  // unconditionally, other code paths exist alongside it that we need to make sure do not intertwine
+    Continue = 2
   };
   Shape *Ancestor; // If not NULL, this shape is the relevant one for purposes of getting to the target block. We break or continue on it
   Branch::FlowType Type; // If Ancestor is not NULL, this says whether to break or continue

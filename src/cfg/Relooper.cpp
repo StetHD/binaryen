@@ -105,12 +105,11 @@ wasm::Expression* Branch::Render(RelooperBuilder& Builder, Block *Target, bool S
   auto* Ret = Builder.makeBlock();
   if (Code) Ret->list.push_back(Code);
   if (SetLabel) Ret->list.push_back(Builder.makeSetLabel(Target->Id));
-  if (Ancestor) {
-    if (Type == Break) {
-      Ret->list.push_back(Builder.makeBlockBreak(Target->Id));
-    } else if (Type == Continue) {
-      Ret->list.push_back(Builder.makeShapeContinue(Ancestor->Id));
-    }
+  if (Type == Break) {
+    Ret->list.push_back(Builder.makeBlockBreak(Target->Id));
+  } else if (Type == Continue) {
+    assert(Ancestor);
+    Ret->list.push_back(Builder.makeShapeContinue(Ancestor->Id));
   }
   Ret->finalize();
   return Ret;
@@ -180,7 +179,6 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
   if (Fused) {
     PrintDebug("Fusing Multiple to Simple\n", 0);
     Parent->Next = Parent->Next->Next;
-
     // When the Multiple has the same number of groups as we have branches,
     // they will all be fused, so it is safe to not set the label at all.
     // If a switch, then we can have multiple branches to the same target
@@ -223,22 +221,21 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
       }
       bool SetCurrLabel = SetLabel && Target->IsCheckedMultipleEntry;
       bool HasFusedContent = Fused && contains(Fused->InnerMap, Target->Id);
+      if (HasFusedContent) {
+        assert(Details->Type == Branch::Break);
+        Details->Type = Branch::Direct;
+      }
       wasm::Expression* CurrContent = nullptr;
+      bool IsDefault = iter == ProcessedBranchesOut.end();
       if (SetCurrLabel || Details->Type != Branch::Direct || HasFusedContent || Details->Code) {
         CurrContent = Details->Render(Builder, Target, SetCurrLabel);
         if (HasFusedContent) {
           CurrContent = Builder.blockify(CurrContent, Fused->InnerMap.find(Target->Id)->second->Render(Builder, InLoop));
-        } else if (Details->Type == Branch::Nested) {
-          // Nest the parent content here, and remove it from showing up afterwards as Next
-          assert(Parent->Next);
-          CurrContent = Builder.blockify(CurrContent, Parent->Next->Render(Builder, InLoop));
-          Parent->Next = nullptr;
         }
       }
-      bool isDefault = iter == ProcessedBranchesOut.end();
       // If there is nothing to show in this branch, omit the condition
       if (CurrContent) {
-        if (isDefault) {
+        if (IsDefault) {
           wasm::Expression* Now;
           if (RemainingConditions) {
             Now = Builder.makeIf(RemainingConditions, CurrContent);
@@ -269,7 +266,7 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
           RemainingConditions = Now;
         }
       }
-      if (isDefault) break;
+      if (IsDefault) break;
     }
   } else {
     // Emit a switch
@@ -297,11 +294,6 @@ wasm::Expression* Block::Render(RelooperBuilder& Builder, bool InLoop) {
         CurrContent = Details->Render(Builder, Target, SetCurrLabel);
         if (HasFusedContent) {
           CurrContent = Builder.blockify(CurrContent, Fused->InnerMap.find(Target->Id)->second->Render(Builder, InLoop));
-        } else if (Details->Type == Branch::Nested) {
-          // Nest the parent content here, and remove it from showing up afterwards as Next
-          assert(Parent->Next);
-          CurrContent = Builder.blockify(CurrContent, Parent->Next->Render(Builder, InLoop));
-          Parent->Next = nullptr;
         }
       }
       // generate a block to branch to, if we have content
@@ -502,7 +494,7 @@ void Relooper::Calculate(Block *Entry) {
         BlockSet JustInner;
         JustInner.insert(Inner);
         for (BlockSet::iterator iter = NextEntries.begin(); iter != NextEntries.end(); iter++) {
-          Solipsize(*iter, Branch::Direct, Simple, JustInner);
+          Solipsize(*iter, Branch::Break, Simple, JustInner);
         }
       }
       return Simple;
