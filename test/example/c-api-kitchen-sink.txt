@@ -379,6 +379,9 @@ raw:
     (local $0 i32)
     (block $block$2$break
       (i32.const 0)
+      (block
+        (br $block$2$break)
+      )
     )
     (block
       (i32.const 1)
@@ -390,6 +393,7 @@ raw:
       (i32.const 0)
       (block
         (i32.const 77)
+        (br $block$2$break)
       )
     )
     (block
@@ -401,6 +405,9 @@ raw:
     (loop $shape$0$continue
       (block $block$2$break
         (i32.const 0)
+        (block
+          (br $block$2$break)
+        )
       )
       (block
         (i32.const 1)
@@ -417,6 +424,7 @@ raw:
         (i32.const 0)
         (block
           (i32.const 33)
+          (br $block$2$break)
         )
       )
       (block
@@ -472,6 +480,7 @@ raw:
             (br $block$3$break)
           )
         )
+        (br $block$3$break)
       )
     )
     (block
@@ -494,7 +503,10 @@ raw:
             )
           )
         )
-        (i32.const -2)
+        (block
+          (i32.const -2)
+          (br $block$3$break)
+        )
       )
     )
     (block
@@ -531,6 +543,9 @@ raw:
       (loop $shape$0$continue
         (block $block$2$break
           (i32.const 0)
+          (block
+            (br $block$2$break)
+          )
         )
         (block
           (i32.const 1)
@@ -552,6 +567,7 @@ raw:
       (i32.const 0)
       (block
         (i32.const 10)
+        (br $block$2$break)
       )
     )
     (block
@@ -561,9 +577,8 @@ raw:
             (block $block$3$break
               (i32.const 1)
               (if
-                (i32.eqz
-                  (i32.const -2)
-                )
+                (i32.const -2)
+                (br $block$3$break)
                 (block
                   (i32.const 20)
                   (br $block$7$break)
@@ -594,6 +609,7 @@ raw:
                   (br $block$6$break)
                 )
               )
+              (br $block$6$break)
             )
           )
           (block
@@ -656,6 +672,21 @@ raw:
       (block $block$3$break
         (block $block$2$break
           (i32.const 0)
+          (if
+            (i32.const 10)
+            (block
+              (set_local $3
+                (i32.const 2)
+              )
+              (br $block$2$break)
+            )
+            (block
+              (set_local $3
+                (i32.const 3)
+              )
+              (br $block$3$break)
+            )
+          )
         )
       )
     )
@@ -667,8 +698,14 @@ raw:
             (i32.const 2)
           )
           (block
+            (set_local $3
+              (i32.const 0)
+            )
             (i32.const 1)
             (block
+              (set_local $3
+                (i32.const 3)
+              )
               (br $shape$1$continue)
             )
           )
@@ -678,8 +715,14 @@ raw:
               (i32.const 3)
             )
             (block
+              (set_local $3
+                (i32.const 0)
+              )
               (i32.const 2)
               (block
+                (set_local $3
+                  (i32.const 2)
+                )
                 (br $shape$1$continue)
               )
             )
@@ -705,6 +748,38 @@ optimized:
   (type $i (func (result i32)))
   (func $just-one-block (type $v)
     (nop)
+  )
+  (func $duffs-device (type $v)
+    (local $0 i32)
+    (set_local $0
+      (i32.const 2)
+    )
+    (loop $shape$1$continue
+      (if
+        (i32.eq
+          (get_local $0)
+          (i32.const 2)
+        )
+        (block
+          (set_local $0
+            (i32.const 3)
+          )
+          (br $shape$1$continue)
+        )
+        (if
+          (i32.eq
+            (get_local $0)
+            (i32.const 3)
+          )
+          (block
+            (set_local $0
+              (i32.const 2)
+            )
+            (br $shape$1$continue)
+          )
+        )
+      )
+    )
   )
   (func $return (type $i) (result i32)
     (i32.const 1337)
@@ -1717,6 +1792,9 @@ raw:
     (local $0 i32)
     (block $block$2$break
       (i32.const 0)
+      (block
+        (br $block$2$break)
+      )
     )
     (block
       (i32.const 1)
@@ -1728,6 +1806,7 @@ raw:
       (i32.const 0)
       (block
         (i32.const 77)
+        (br $block$2$break)
       )
     )
     (block
@@ -1739,6 +1818,9 @@ raw:
     (loop $shape$0$continue
       (block $block$2$break
         (i32.const 0)
+        (block
+          (br $block$2$break)
+        )
       )
       (block
         (i32.const 1)
@@ -1755,6 +1837,7 @@ raw:
         (i32.const 0)
         (block
           (i32.const 33)
+          (br $block$2$break)
         )
       )
       (block
@@ -1810,6 +1893,7 @@ raw:
             (br $block$3$break)
           )
         )
+        (br $block$3$break)
       )
     )
     (block
@@ -1832,7 +1916,10 @@ raw:
             )
           )
         )
-        (i32.const -2)
+        (block
+          (i32.const -2)
+          (br $block$3$break)
+        )
       )
     )
     (block
@@ -1869,6 +1956,9 @@ raw:
       (loop $shape$0$continue
         (block $block$2$break
           (i32.const 0)
+          (block
+            (br $block$2$break)
+          )
         )
         (block
           (i32.const 1)
@@ -1890,6 +1980,7 @@ raw:
       (i32.const 0)
       (block
         (i32.const 10)
+        (br $block$2$break)
       )
     )
     (block
@@ -1899,9 +1990,8 @@ raw:
             (block $block$3$break
               (i32.const 1)
               (if
-                (i32.eqz
-                  (i32.const -2)
-                )
+                (i32.const -2)
+                (br $block$3$break)
                 (block
                   (i32.const 20)
                   (br $block$7$break)
@@ -1932,6 +2022,7 @@ raw:
                   (br $block$6$break)
                 )
               )
+              (br $block$6$break)
             )
           )
           (block
@@ -1994,6 +2085,21 @@ raw:
       (block $block$3$break
         (block $block$2$break
           (i32.const 0)
+          (if
+            (i32.const 10)
+            (block
+              (set_local $3
+                (i32.const 2)
+              )
+              (br $block$2$break)
+            )
+            (block
+              (set_local $3
+                (i32.const 3)
+              )
+              (br $block$3$break)
+            )
+          )
         )
       )
     )
@@ -2005,8 +2111,14 @@ raw:
             (i32.const 2)
           )
           (block
+            (set_local $3
+              (i32.const 0)
+            )
             (i32.const 1)
             (block
+              (set_local $3
+                (i32.const 3)
+              )
               (br $shape$1$continue)
             )
           )
@@ -2016,8 +2128,14 @@ raw:
               (i32.const 3)
             )
             (block
+              (set_local $3
+                (i32.const 0)
+              )
               (i32.const 2)
               (block
+                (set_local $3
+                  (i32.const 2)
+                )
                 (br $shape$1$continue)
               )
             )
@@ -2047,6 +2165,38 @@ optimized:
   (type $i (func (result i32)))
   (func $just-one-block (type $v)
     (nop)
+  )
+  (func $duffs-device (type $v)
+    (local $0 i32)
+    (set_local $0
+      (i32.const 2)
+    )
+    (loop $shape$1$continue
+      (if
+        (i32.eq
+          (get_local $0)
+          (i32.const 2)
+        )
+        (block
+          (set_local $0
+            (i32.const 3)
+          )
+          (br $shape$1$continue)
+        )
+        (if
+          (i32.eq
+            (get_local $0)
+            (i32.const 3)
+          )
+          (block
+            (set_local $0
+              (i32.const 2)
+            )
+            (br $shape$1$continue)
+          )
+        )
+      )
+    )
   )
   (func $return (type $i) (result i32)
     (i32.const 1337)
