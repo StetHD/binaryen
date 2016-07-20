@@ -53,24 +53,21 @@ public:
   wasm::Binary* makeCheckLabel(wasm::Index value) {
     return makeBinary(wasm::EqInt32, makeGetLabel(), makeConst(wasm::Literal(int32_t(value))));
   }
+
+  // breaks are on blocks, as they can be specific, we make one wasm block per basic block
   wasm::Break* makeBlockBreak(int id) {
     return wasm::Builder::makeBreak(getBlockBreakName(id));
   }
-  wasm::Break* makeShapeBreak(int id) {
-    return wasm::Builder::makeBreak(getShapeBreakName(id));
-  }
-  // continues are always on shapes
+  // continues are on shapes, as there is one per loop, and if we have more than one
+  // going there, it is irreducible control flow anyhow
   wasm::Break* makeShapeContinue(int id) {
-    return wasm::Builder::makeBreak(getContinueName(id));
+    return wasm::Builder::makeBreak(getShapeContinueName(id));
   }
 
   wasm::Name getBlockBreakName(int id) {
     return wasm::Name(std::string("block$") + std::to_string(id) + "$break");
   }
-  wasm::Name getShapeBreakName(int id) {
-    return wasm::Name(std::string("shape$") + std::to_string(id) + "$break");
-  }
-  wasm::Name getContinueName(int id) {
+  wasm::Name getShapeContinueName(int id) {
     return wasm::Name(std::string("shape$") + std::to_string(id) + "$continue");
   }
 };
